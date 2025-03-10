@@ -2,10 +2,93 @@
 <html>
   <head>
     <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
-  </body>
+  <body class="d-grid min-vh-100">
+
+    <main class="min-vh-100 bg-light text-center">
+        <div id="map" class="min-vh-100"></div>
+        <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content d-flex flex-column align-items-center justify-content-center p-5 gap-3 width-75">
+                    <img id="modalIcon" src="" alt="Icon" class="mb-3" style="width: 64px; height: 64px;">
+                    <h4 id="modalTitle"></h4>
+                    <p id="modalDescription"></p>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">OK</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <aside class="vh-100">
+        <ul id="pointsList" class="list-unstyled overflow-y-auto" style="max-height: 100%;"></ul>
+    </aside>
+
+    <script>
+
+        var museumIcon = L.icon({
+            iconUrl: '/images/museum.png', 
+            iconSize: [32, 32], 
+            iconAnchor: [16, 32], 
+            popupAnchor: [0, -32]
+        });
+
+        var map = L.map('map').setView([36.7213, -4.4214], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        fetch("../geojson/da_cultura_ocio_monumentos-4326.geojson")
+        .then(response => response.json())
+        .then(data => {
+            L.geoJSON(data, {
+                pointToLayer: function (feature, latlng) {
+                    return L.marker(latlng, { icon: museumIcon });
+                },
+                onEachFeature: function (feature, layer) {
+                    let name = feature.properties.NOMBRE;
+                    let description = feature.properties.DESCRIPCION || "No description available";
+
+                    let listItem = document.createElement("li");
+                    listItem.className = "py-2 px-3 border-bottom";
+                    listItem.innerText = name;
+
+                    listItem.style.cursor = "pointer";
+                    listItem.onclick = function () {
+                        map.setView(layer.getLatLng(), 19);
+
+                        document.getElementById("modalIcon").src = "/images/museum.png";
+                        document.getElementById("modalTitle").innerText = name;
+                        document.getElementById("modalDescription").innerText = description;
+
+                        var modal = new bootstrap.Modal(document.getElementById("infoModal"));
+                        modal.show();
+                    };
+
+                    document.querySelector('#pointsList').appendChild(listItem);
+                    
+                    layer.on("click", function () {
+                        map.setView(layer.getLatLng(), 19);
+
+                        document.getElementById("modalIcon").src = "/images/museum.png";
+                        document.getElementById("modalTitle").innerText = name;
+                        document.getElementById("modalDescription").innerText = description;
+
+                        var modal = new bootstrap.Modal(document.getElementById("infoModal"));
+                        modal.show();
+                    });
+                }
+            }).addTo(map);
+        })
+        .catch(error => console.error("Error loading GeoJSON:", error));
+
+    </script>
+</body>
 </html>

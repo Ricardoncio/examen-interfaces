@@ -1,8 +1,9 @@
 body {
-  padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  grid-template-columns: 2fr 1fr;
 }
 
-a {
-  color: #00B7FF;
+li:hover {
+  background-color: rgb(220, 220, 220);
+  transition: 0.2s;
 }
